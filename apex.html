@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX ULTRA | SECURE VAULT</title>
+    <style>
+        :root {
+            --blue: #00f2ff;
+            --yellow: #ffff00;
+            --black: #000000;
+            --glow-blue: 0 0 20px #00f2ff;
+            --glow-yellow: 0 0 20px #ffff00;
+        }
+
+
+        body {
+            background-color: var(--black);
+            color: white;
+            font-family: 'Arial Black', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 320px;
+            border-right: 4px solid var(--blue);
+            box-shadow: var(--glow-blue);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background: #050505;
+            z-index: 10;
+        }
+
+
+        h1 {
+            color: var(--yellow);
+            text-shadow: var(--glow-yellow);
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+
+        .dash-btn {
+            background: transparent;
+            color: var(--blue);
+            border: 3px solid var(--blue);
+            padding: 18px;
+            margin: 8px 0;
+            font-size: 1.3rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+            width: 100%;
+        }
+
+
+        .dash-btn:hover {
+            background: var(--blue);
+            color: black;
+            box-shadow: var(--glow-blue);
+        }
+
+
+        /* --- MAIN DISPLAY --- */
+        #main-display {
+            flex-grow: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+        }
+
+
+        .dots-btn {
+            position: absolute; top: 20px; right: 40px;
+            font-size: 4rem; color: var(--yellow);
+            background: none; border: none; cursor: pointer;
+            text-shadow: var(--glow-yellow);
+            z-index: 100;
+        }
+
+
+        /* --- SCREENS --- */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; }
+        .active-screen { display: flex; }
+
+
+        #welcome-text {
+            font-size: 5rem;
+            color: var(--blue);
+            text-shadow: var(--glow-blue);
+            text-align: center;
+            margin-top: 10vh;
+        }
+
+
+        /* --- EDITOR --- */
+        textarea {
+            width: 100%; height: 60vh;
+            background: #0a0a0a; border: 5px solid var(--yellow);
+            color: var(--yellow); font-size: 2.5rem;
+            padding: 25px; box-shadow: var(--glow-yellow);
+            box-sizing: border-box;
+            outline: none;
+        }
+
+
+        .save-btn {
+            background: var(--yellow); color: black;
+            padding: 25px; font-size: 2rem; border: none;
+            margin-top: 20px; cursor: pointer; font-weight: bold;
+            box-shadow: var(--glow-yellow);
+        }
+
+
+        /* --- CALENDAR --- */
+        #calendar-grid {
+            display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+            padding-bottom: 50px;
+        }
+        .month-box {
+            border: 2px solid var(--blue); padding: 10px; width: 250px; background: #080808;
+        }
+        .month-title { color: var(--yellow); text-align: center; font-size: 1.5rem; margin-bottom: 10px; }
+        .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .day {
+            aspect-ratio: 1; border: 1px solid #333; display: flex; align-items: center;
+            justify-content: center; font-size: 0.8rem; cursor: pointer; color: var(--blue);
+        }
+        .day:hover { background: var(--blue); color: black; }
+        .day.filled { border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+
+
+        /* --- DROPDOWN --- */
+        #dropdown-menu {
+            position: absolute; top: 100px; right: 40px;
+            background: #111; border: 3px solid var(--yellow);
+            display: none; flex-direction: column; z-index: 150;
+        }
+        #dropdown-menu button {
+            background: none; color: white; padding: 20px; border: none; cursor: pointer; font-size: 1.5rem; text-align: left; width: 250px;
+        }
+        #dropdown-menu button:hover { background: var(--yellow); color: black; }
+
+
+        /* --- SECURITY MODAL --- */
+        #pass-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content { background: #111; padding: 40px; border: 5px solid var(--blue); box-shadow: var(--glow-blue); text-align: center; }
+        #pin-field { font-size: 3rem; width: 250px; text-align: center; background: black; border: 2px solid var(--blue); color: var(--blue); margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+
+    <div id="sidebar">
+        <h1>APEX</h1>
+        <button class="dash-btn" onclick="authGate('daily')">Daily</button>
+        <button class="dash-btn" onclick="authGate('weekly')">Weekly</button>
+        <button class="dash-btn" onclick="authGate('monthly')">Monthly</button>
+        <button class="dash-btn" onclick="authGate('seasonal')">Seasonal</button>
+        <button class="dash-btn" onclick="authGate('yearly')">Yearly</button>
+        <button class="dash-btn" onclick="authGate('decade')">Decade</button>
+        <button class="dash-btn" onclick="authGate('lifetime')">Lifetime</button>
+    </div>
+
+
+    <div id="main-display">
+        <button class="dots-btn" onclick="toggleMenu()">⋮</button>
+        
+        <div id="dropdown-menu">
+            <button onclick="authGate('diary')">📓 My Diary</button>
+            <button onclick="openCalendar()">📅 Calendar Grid</button>
+            <button onclick="changePin()">🔑 Change Password</button>
+        </div>
+
+
+        <div id="welcome-screen" class="screen active-screen">
+            <h2 id="welcome-text">WELCOME TO THE<br>MAIN MENU</h2>
+            <p style="text-align: center; font-size: 1.5rem; color: var(--yellow);">SELECT A DASHBOARD TO BEGIN</p>
+        </div>
+
+
+        <div id="editor-screen" class="screen">
+            <h2 id="view-title" style="font-size: 3rem; color: var(--blue); margin: 0 0 20px 0;">DASHBOARD</h2>
+            <textarea id="main-editor" placeholder="Vault Locked. Type here..."></textarea>
+            <button class="save-btn" onclick="saveData()">💾 SECURE SAVE DATA</button>
+        </div>
+
+
+        <div id="calendar-screen" class="screen">
+            <h2 style="font-size: 3rem; color: var(--yellow); margin-bottom: 20px;">ANNUAL FILE GRID</h2>
+            <div id="calendar-grid"></div>
+        </div>
+    </div>
+
+
+    <div id="pass-modal">
+        <div class="modal-content">
+            <h2 id="modal-label" style="color: var(--blue);">ENTER ACCESS PIN</h2>
+            <input type="password" id="pin-field">
+            <div style="margin-bottom: 20px;">
+                <input type="checkbox" onchange="document.getElementById('pin-field').type = this.checked ? 'text' : 'password'"> Show PIN
+            </div>
+            <button class="dash-btn" onclick="verifyPin()">UNLOCK</button>
+            <button class="dash-btn" style="border-color: red; color: red;" onclick="closeModal()">CANCEL</button>
+        </div>
+    </div>
+
+
+    <script>
+        let currentVault = '';
+        let masterPin = localStorage.getItem('apex_pin');
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+
+        function toggleMenu() {
+            const m = document.getElementById('dropdown-menu');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+
+        function authGate(vault) {
+            currentVault = vault;
+            document.getElementById('dropdown-menu').style.display = 'none';
+            document.getElementById('modal-label').innerText = !masterPin ? "CREATE NEW PIN" : "ENTER ACCESS PIN";
+            document.getElementById('pass-modal').style.display = 'flex';
+            document.getElementById('pin-field').focus();
+        }
+
+
+        function verifyPin() {
+            const input = document.getElementById('pin-field').value;
+            if (!masterPin) {
+                if (input.length > 0) {
+                    masterPin = input;
+                    localStorage.setItem('apex_pin', input);
+                    unlockVault();
+                }
+            } else {
+                if (input === masterPin) {
+                    unlockVault();
+                } else {
+                    alert("ACCESS DENIED");
+                }
+            }
+            document.getElementById('pin-field').value = '';
+        }
+
+
+        function unlockVault() {
+            document.getElementById('pass-modal').style.display = 'none';
+            showScreen('editor-screen');
+            
+            // Handle special "Diary" logic for current date
+            if (currentVault === 'diary') {
+                const now = new Date();
+                currentVault = `file_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}`;
+            }
+
+
+            loadData();
+        }
+
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+
+        function saveData() {
+            const content = document.getElementById('main-editor').value;
+            localStorage.setItem('apex_data_' + currentVault, content);
+            alert("FILE ENCRYPTED AND SAVED");
+        }
+
+
+        function loadData() {
+            let displayTitle = currentVault.toUpperCase();
+            if (currentVault.startsWith('file_')) {
+                const p = currentVault.split('_');
+                displayTitle = `DIARY: ${months[p[2]]} ${p[3]}, ${p[1]}`;
+            }
+            document.getElementById('view-title').innerText = displayTitle;
+            document.getElementById('main-editor').value = localStorage.getItem('apex_data_' + currentVault) || '';
+        }
+
+
+        function openCalendar() {
+            document.getElementById('dropdown-menu').style.display = 'none';
+            showScreen('calendar-screen');
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            const year = 2026;
+            months.forEach((name, idx) => {
+                const mBox = document.createElement('div');
+                mBox.className = 'month-box';
+                mBox.innerHTML = `<div class="month-title">${name}</div>`;
+                
+                const dGrid = document.createElement('div');
+                dGrid.className = 'days';
+                
+                const daysInMonth = new Date(year, idx + 1, 0).getDate();
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const key = `file_${year}_${idx}_${d}`;
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day';
+                    if (localStorage.getItem('apex_data_' + key)) dayEl.classList.add('filled');
+                    dayEl.innerText = d;
+                    dayEl.onclick = () => authGate(key);
+                    dGrid.appendChild(dayEl);
+                }
+                mBox.appendChild(dGrid);
+                grid.appendChild(mBox);
+            });
+        }
+
+
+        function changePin() {
+            const old = prompt("Enter current PIN to reset:");
+            if (old === masterPin) {
+                masterPin = null;
+                localStorage.removeItem('apex_pin');
+                alert("PIN CLEARED. Click any dashboard to set a new one.");
+                location.reload();
+            } else {
+                alert("INCORRECT");
+            }
+        }
+
+
+        function closeModal() {
+            document.getElementById('pass-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
